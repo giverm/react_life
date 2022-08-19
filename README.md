@@ -1,1 +1,1 @@
-# react_life
+# React Game of Life
