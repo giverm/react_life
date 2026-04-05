@@ -19,14 +19,23 @@ export function nextState(prev: Grid, out: Grid, size: number): Grid {
       const count = countNeighbors(i, j, prev, size);
       const alive = prev[idx] === 1;
       out[idx] = alive
-        ? (count === 2 || count === 3 ? 1 : 0)
-        : (count === 3 ? 1 : 0);
+        ? count === 2 || count === 3
+          ? 1
+          : 0
+        : count === 3
+          ? 1
+          : 0;
     }
   }
   return out;
 }
 
-function countNeighbors(i: number, j: number, grid: Grid, size: number): number {
+function countNeighbors(
+  i: number,
+  j: number,
+  grid: Grid,
+  size: number,
+): number {
   let neighbors = 0;
   for (let di = -1; di <= 1; di++) {
     for (let dj = -1; dj <= 1; dj++) {

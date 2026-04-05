@@ -12,13 +12,23 @@ function World() {
         <canvas ref={canvasRef} className="life-canvas" />
         <div className="controls">
           <div className="btn-group">
-            <button className="btn" onClick={() => setRunning(true)}>START</button>
-            <button className="btn" onClick={() => setRunning(false)}>STOP</button>
-            <button className="btn" onClick={step}>STEP</button>
+            <button className="btn" onClick={() => setRunning(true)}>
+              START
+            </button>
+            <button className="btn" onClick={() => setRunning(false)}>
+              STOP
+            </button>
+            <button className="btn" onClick={step}>
+              STEP
+            </button>
           </div>
           <div className="btn-group">
-            <button className="btn" onClick={clear}>CLEAR</button>
-            <button className="btn" onClick={randomize}>RANDOM</button>
+            <button className="btn" onClick={clear}>
+              CLEAR
+            </button>
+            <button className="btn" onClick={randomize}>
+              RANDOM
+            </button>
           </div>
         </div>
       </div>
