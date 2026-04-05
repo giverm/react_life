@@ -4,6 +4,11 @@
   justify-content: center;
 }
 
+.life-canvas {
+  display: block;
+  touch-action: none;
+}
+
 .controls {
   display: flex;
   justify-content: space-between;
