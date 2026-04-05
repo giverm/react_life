@@ -1,1 +1,1 @@
-export type Grid = boolean[][];
+export type Grid = Uint8Array;

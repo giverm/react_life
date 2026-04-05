@@ -1,36 +1,29 @@
 import { useEffect, useState } from 'react';
-import type { Grid } from '../types';
 import { SIZE, TICK_MS } from '../constants';
 import Board from './Board';
-import { nextState } from '../utils/state';
+import { nextState, emptyGrid, randomGrid } from '../utils/state';
 import './world.css';
 
-function freshWorld(): Grid {
-  return Array.from(Array(SIZE), () => new Array(SIZE).fill(false) as boolean[]);
-}
-
 function World() {
-  const [world, setWorld] = useState(freshWorld);
+  const [world, setWorld] = useState(() => emptyGrid(SIZE));
   const [running, setRunning] = useState(false);
 
   function randomWorld() {
-    setWorld(Array.from(Array(SIZE), () =>
-      Array.from(Array(SIZE), () => Math.random() < 0.5)
-    ));
+    setWorld(randomGrid(SIZE));
   }
 
   function clearWorld() {
-    setWorld(freshWorld());
+    setWorld(emptyGrid(SIZE));
   }
 
   function nextStep() {
-    setWorld(prev => nextState(prev));
+    setWorld(prev => nextState(prev, emptyGrid(SIZE), SIZE));
   }
 
   useEffect(() => {
     if (!running) return;
     const interval = setInterval(() => {
-      setWorld(prev => nextState(prev));
+      setWorld(prev => nextState(prev, emptyGrid(SIZE), SIZE));
     }, TICK_MS);
     return () => clearInterval(interval);
   }, [running]);
