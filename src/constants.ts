@@ -1,3 +1,3 @@
 export const SIZE = 64;
 export const CELL_PX = 10;
-export const TICK_MS = 50;
+export const GPS = 20;

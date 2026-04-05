@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { CELL_PX, TICK_MS } from '../constants';
+import { CELL_PX, GPS } from '../constants';
 import { emptyGrid, nextState } from '../utils/state';
 
 const DEAD_COLOR = '#FFB6C1';
@@ -121,11 +121,30 @@ export function useLifeWorld(size: number) {
     };
   }, [size, draw]);
 
-  // Tick loop (setInterval — Phase 4c will swap this for requestAnimationFrame)
+  // Tick loop: requestAnimationFrame with a time accumulator. Decouples the
+  // simulation rate (GPS) from the display refresh rate and stays in sync
+  // when frames are slow. Delta is clamped so a backgrounded tab's multi-
+  // second catch-up can't spin the simulation forward and freeze the UI.
   useEffect(() => {
     if (!running) return;
-    const id = setInterval(step, TICK_MS);
-    return () => clearInterval(id);
+    const stepMs = 1000 / GPS;
+    const MAX_DELTA = 250;
+    let rafId = 0;
+    let last = performance.now();
+    let accumulator = 0;
+
+    const tick = (now: number) => {
+      const delta = Math.min(now - last, MAX_DELTA);
+      last = now;
+      accumulator += delta;
+      while (accumulator >= stepMs) {
+        step();
+        accumulator -= stepMs;
+      }
+      rafId = requestAnimationFrame(tick);
+    };
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
   }, [running, step]);
 
   return { canvasRef, running, setRunning, step, clear, randomize };
