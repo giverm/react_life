@@ -1,70 +1,74 @@
-# Getting Started with Create React App
+# react_life
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Conway's Game of Life, rendered on an HTML canvas. A 64×64 grid of cells evolves one generation at a time under the classic Life rules, and you can draw initial configurations by clicking or dragging on the board.
 
-## Available Scripts
+## The rules
 
-In the project directory, you can run:
+Every cell is either alive or dead. On each tick, each cell's next state is determined by its eight neighbors:
 
-### `npm start`
+- A **live** cell with 2 or 3 live neighbors survives. Otherwise it dies (underpopulation or overcrowding).
+- A **dead** cell with exactly 3 live neighbors becomes alive (reproduction).
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+From these three lines of logic you get still lifes, oscillators, spaceships, guns, and an endless zoo of emergent behavior.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Running it
 
-### `npm test`
+Prerequisites: Node 20+.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+```bash
+npm install
+npm run dev
+```
 
-### `npm run build`
+Then open the URL Vite prints (typically http://localhost:5173).
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Other scripts
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+| Command           | What it does                                         |
+| ----------------- | ---------------------------------------------------- |
+| `npm run dev`     | Start the Vite dev server with HMR                   |
+| `npm run build`   | Type-check and produce a production build in `dist/` |
+| `npm run preview` | Serve the production build locally                   |
+| `npm test`        | Run the Vitest unit tests once                       |
+| `npm run lint`    | Run ESLint across `.ts` / `.tsx` files               |
+| `npm run format`  | Run Prettier with `--write` over `src/`              |
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## Controls
 
-### `npm run eject`
+- **Click** a cell to toggle it between alive and dead.
+- **Click and drag** to paint a region. The mode is determined by the first cell you toggle: if you turned a dead cell on, the drag paints alive; if you turned a live cell off, the drag erases.
+- **START / STOP** run and pause the simulation.
+- **STEP** advances exactly one generation.
+- **CLEAR** empties the grid.
+- **RANDOM** fills the grid with a 50/50 random pattern.
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## How it works
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+The grid is a flat `Uint8Array` of length `SIZE * SIZE`, indexed as `grid[i * SIZE + j]`. Two buffers are pre-allocated and swapped on each tick, so advancing the simulation is zero-allocation in steady state.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+Rendering is a single `<canvas>` rather than per-cell DOM nodes. The canvas is sized with `devicePixelRatio` for crisp output on retina displays. Each frame fills a background rectangle in the gridline color, then draws each cell as a 1px-inset rectangle — the inset gaps form the gridlines for free, with no extra draw calls.
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+The tick loop is a `requestAnimationFrame` with a time accumulator targeting a configurable generations-per-second rate. Delta is clamped so a backgrounded tab returning after several seconds can't drain hundreds of queued generations in a single frame.
 
-## Learn More
+All of this lives behind a single `useLifeWorld` hook that owns the canvas ref, the buffer pair, the pointer handlers, and the rAF loop, and exposes a small imperative API (`step`, `clear`, `randomize`, `setRunning`). `World.tsx` is a thin wrapper that wires the hook to button controls.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## Project layout
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+```
+src/
+  components/
+    World.tsx          top-level component: canvas + controls
+    world.css
+  hooks/
+    useLifeWorld.ts    buffers, draw, pointer input, tick loop
+  utils/
+    state.ts           nextState, emptyGrid, randomGrid
+    state.test.ts      Vitest unit tests for the game logic
+  constants.ts         SIZE, CELL_PX, GPS
+  types.ts             Grid = Uint8Array
+  main.tsx             app entry
+```
 
-### Code Splitting
+## Tech stack
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Vite, React 19, TypeScript, Vitest, ESLint (with `typescript-eslint`), Prettier.
